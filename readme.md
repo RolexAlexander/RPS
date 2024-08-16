@@ -37,4 +37,4 @@ The model was initially trained using a publicly available dataset. You can find
 
 ## Disclaimer
 
-**Note**: The current YOLOv8 model is overfitted and only predicts "scissors." Future improvements will involve curating our own dataset to create a more accurate and versatile model.
+**Note**: The current YOLOv8 model is overfitted and only predicts "scissors." Future improvements will involve creating a more accurate and versatile model.
