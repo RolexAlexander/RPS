@@ -9,7 +9,7 @@ import datetime
 import numpy as np
 import mediapipe as mp
 from ultralytics import YOLO
-from utils import classify_hand_landmarks
+from src.utils import classify_hand_landmarks
 
 # Initialize Pygame
 pygame.init()
