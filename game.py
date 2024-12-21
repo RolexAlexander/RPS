@@ -3,7 +3,13 @@ import pygame.camera
 import random
 import time
 import json
+import cv2
+import os
+import datetime
+import numpy as np
+import mediapipe as mp
 from ultralytics import YOLO
+from utils import classify_hand_landmarks
 
 # Initialize Pygame
 pygame.init()
@@ -13,8 +19,13 @@ pygame.camera.init()
 cam = pygame.camera.Camera(0, (640, 480))
 cam.start()
 
-# Initialize YOLO model
-model = YOLO("./models/rps_v0.1.pt")
+# Initialize YOLO model Deprecated because model is not accurate enough
+# model = YOLO("./models/rps_v0.1.pt")
+# now using mediapipe
+
+# Initialize Mediapipe Hands and drawing utilities
+mp_hands = mp.solutions.hands
+mp_drawing = mp.solutions.drawing_utils
 
 # Screen dimensions
 WIDTH, HEIGHT = 800, 600
@@ -69,14 +80,61 @@ small_font = pygame.font.SysFont(None, 35)
 
 # Capture and classify user choice
 def detect_user_choice():
+    # grab the image
     img = cam.get_image()
-    pygame.image.save(img, "user_choice.png")
 
-    # Use the model to classify the captured image
-    result = model("user_choice.png")[0].tojson()
-    # print(f"Resultxxxxxxxxxxxxxxxxxxxxxxx:\n\n {result}, {type(result)}")
-    print(f"Resultxxxxxxxxxxxxxxxxxxxxxxx:\n\n {json.loads(result)}{type(json.loads(result))}")
-    return json.loads(result)[0]["name"]  # Expected to return "rock", "paper", or "scissors"
+    # save the image 
+    # # Convert Pygame surface to string buffer
+    # buffer = pygame.image.tostring(screen_surface, "RGB")
+    
+    # # Get screen dimensions
+    # width, height = screen_surface.get_size()
+    
+    # Convert to NumPy array and reshape to OpenCV image format
+    # create a copy of the surface
+    view = pygame.surfarray.array3d(img)
+
+    # convert from (width, height, channel) to (height, width, channel)
+    view = view.transpose([1, 0, 2])
+
+    # convert from rgb to bgr
+    img = cv2.cvtColor(view, cv2.COLOR_RGB2BGR)
+
+    # Process the image with Mediapipe Hands
+    hands = mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.7)
+    result = hands.process(img)
+    gesture = "Unknown"
+
+    if result.multi_hand_landmarks:
+        for hand_landmarks in result.multi_hand_landmarks:
+            # Convert landmarks to a list of (x, y, z) tuples
+            landmarks = [(lm.x, lm.y, lm.z) for lm in hand_landmarks.landmark]
+
+            # Classify gesture
+            gesture = classify_hand_landmarks(landmarks)
+
+            # Annotate the image
+            mp_drawing.draw_landmarks(img, hand_landmarks, mp_hands.HAND_CONNECTIONS, 
+                                      mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=4),
+                                      mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=2))
+
+    # If gesture is unknown, generate a random result
+    if gesture == "Unknown":
+        gesture = random.choice(["Rock", "Paper", "Scissors"])
+
+    # Annotate the image with the result
+    cv2.putText(img, f"Gesture: {gesture}", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+
+    # Save the annotated image to the logs folder with a timestamp
+    logs_folder = "logs"
+    os.makedirs(logs_folder, exist_ok=True)
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    annotated_path = os.path.join(logs_folder, f"gesture_{timestamp}.png")
+    cv2.imwrite(annotated_path, img)
+
+    hands.close()
+    print(f"Gesture: {gesture}")
+    return gesture.lower()
 
 # Main game function
 def main():

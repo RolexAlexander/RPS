@@ -1,2 +1,4 @@
 ultralytics==8.2.76
 pygame==2.6.0
+opencv-python==4.10.0.84
+mediapipe==0.10.20
