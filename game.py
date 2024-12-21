@@ -133,7 +133,7 @@ def detect_user_choice():
     cv2.imwrite(annotated_path, img)
 
     hands.close()
-    print(f"Gesture: {gesture}")
+
     return gesture.lower()
 
 # Main game function
@@ -201,6 +201,12 @@ def main():
         draw_count_surface = small_font.render(f"x{computer_draws}", True, BLACK)
         screen.blit(draw_count_surface, (WIDTH - 150, 25))
         
+        if not playing and countdown == 3:
+            # Display "Press Tab to Play"
+            prompt_surface = small_font.render("Press Tab to Play", True, GRAY)
+            screen.blit(prompt_surface, ((WIDTH - prompt_surface.get_width()) // 2, HEIGHT - 50))
+        
+        # Display countdown
         if playing:
             # Countdown
             if countdown > 0:
