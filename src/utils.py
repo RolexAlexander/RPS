@@ -9,6 +9,20 @@ from azure.ai.inference.models import SystemMessage
 from azure.core.credentials import AzureKeyCredential
 
 
+# Function to load env cause dotenv is not working in the windows environment and i can't switch because i dont have camera access in the wsl ubuntu environment
+def load_env(file_path: str):
+    """
+    Load environment variables from a .env file.
+    :param file_path: Path to the .env file.
+    """
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"{file_path} does not exist.")
+    with open(file_path, "r") as file:
+        for line in file:
+            if "=" in line:
+                key, value = line.strip().split("=", 1)
+                os.environ[key] = value
+                
 # Normalize landmarks to handle variations in hand position and orientation
 def normalize_landmarks(landmarks):
     if landmarks:
