@@ -1,9 +1,11 @@
 import cv2
 import json
 import os
+import socket
+import logging
 import mediapipe as mp
 import numpy as np
-from typing import List, Dict
+from typing import List, Dict, Optional, Tuple
 from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage
 from azure.core.credentials import AzureKeyCredential
@@ -266,3 +268,27 @@ def run_rock_paper_scissors_ai_vs_ai_openai_model(
         return function_arguments_json
     except (KeyError, IndexError, json.JSONDecodeError):
         raise ValueError("Failed to extract function arguments from response.")
+    
+def get_local_ip() -> Optional[str]:
+    """
+    Get the local IP address of the system that's suitable for LAN/network connections.
+    Prioritizes non-localhost IPv4 addresses.
+    
+    Returns:
+        str: The local IP address, or None if no suitable IP is found
+    """
+    try:
+        # Fallback method if the above doesn't work
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            # Doesn't need to be reachable
+            s.connect(('10.255.255.255', 1))
+            ip = s.getsockname()[0]
+        except Exception:
+            ip = '127.0.0.1'
+        finally:
+            s.close()
+        return ip
+    except Exception as e:
+        logging.error(f"Error getting local IP: {str(e)}")
+        return None

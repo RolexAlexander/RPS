@@ -109,13 +109,6 @@ small_font = pygame.font.SysFont(None, 35)
 def detect_user_choice():
     # grab the image
     img = cam.get_image()
-
-    # save the image 
-    # # Convert Pygame surface to string buffer
-    # buffer = pygame.image.tostring(screen_surface, "RGB")
-    
-    # # Get screen dimensions
-    # width, height = screen_surface.get_size()
     
     # Convert to NumPy array and reshape to OpenCV image format
     # create a copy of the surface

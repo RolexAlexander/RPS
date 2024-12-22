@@ -261,7 +261,7 @@ def main():
                     computer_draws += 1
 
                     # update ai history
-                    ai1_history += f"AI: {computer_choice}, User: {user_choice}, Result: Draw\n"
+                    ai1_history += f"AI: {user_choice}, User: {computer_choice}, Result: Draw\n"
                     ai2_history += f"AI: {computer_choice}, User: {user_choice}, Result: Draw\n"
 
                 elif (user_choice == "rock" and computer_choice == "scissors") or \
@@ -272,8 +272,8 @@ def main():
                     computer_losses += 1
 
                     # update history
-                    ai1_history += f"AI: {user_choice}, User: {computer_choice}, Result: AI Wins\n"
-                    ai2_history += f"AI: {computer_choice}, User: {user_choice}, Result: AI Loses\n"
+                    ai1_history += f"AI: {user_choice}, User: {computer_choice}, Result: Win\n"
+                    ai2_history += f"AI: {computer_choice}, User: {user_choice}, Result: Loss\n"
 
                 else:
                     result_text = "You Lose!"
@@ -281,8 +281,8 @@ def main():
                     computer_wins += 1
 
                     # update history
-                    ai1_history += f"AI: {user_choice}, User: {computer_choice}, Result: AI Loses\n"
-                    ai2_history += f"AI: {computer_choice}, User: {user_choice}, Result: AI Wins\n"
+                    ai1_history += f"AI: {user_choice}, User: {computer_choice}, Result: Loss\n"
+                    ai2_history += f"AI: {computer_choice}, User: {user_choice}, Result: Win\n"
                 
                 countdown = -1  # Stop the countdown
                 playing = False  # End the round
