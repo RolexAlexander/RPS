@@ -1,10 +1,13 @@
 import cv2
+import json
+import os
 import mediapipe as mp
 import numpy as np
+from typing import List, Dict
+from azure.ai.inference import ChatCompletionsClient
+from azure.ai.inference.models import SystemMessage
+from azure.core.credentials import AzureKeyCredential
 
-# Initialize Mediapipe Hands and drawing utilities
-mp_hands = mp.solutions.hands
-mp_drawing = mp.solutions.drawing_utils
 
 # Normalize landmarks to handle variations in hand position and orientation
 def normalize_landmarks(landmarks):
@@ -51,3 +54,101 @@ def classify_hand_landmarks(landmarks):
         elif all(fingers_up.values()):
             return "Paper"
     return "Unknown"
+
+# Function to play rock paper scissors against openai models
+def run_rock_paper_scissors_openai_model(
+        prompt: str = """
+            You are the best rock-paper-scissors player in the world, and you are in the finals against the user. Your goal is to win the game. Below is the history of the previous rounds. In each round, "AI" represents your choice, "User" represents the user's choice, and "Result" shows who won.
+
+            History:
+            None
+
+            Analyze the user's past choices and any patterns you observe. Then, decide your next move: Rock, Paper, or Scissors. Your goal is to maximize your chances of winning. If no clear pattern is visible, make a logical guess to counter the user's most likely next move.
+
+            Respond in the following format:
+            Choice: [Your choice]
+            Reason: [Your reasoning for the choice]
+        """, 
+        model_name: str = "gpt-4o", 
+        api_key: str = "", 
+        tools: List[Dict] = [
+            {
+                "type": "function", 
+                "function": {
+                    "name": "play_rock_paper_scissors",
+                    "type": "function",
+                    "description": "Play Rock-Paper-Scissors against the user by analyzing the history of moves to maximize the AI's chances of winning.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "Choice": {
+                                "type": "string",
+                                "description": "The choice the AI makes to play, considering the given history and strategy.",
+                                "enum": ["Rock", "Paper", "Scissors"]
+                            },
+                            "Reason": {
+                                "type": "string",
+                                "description": "The explanation of why the AI chose this move, considering patterns and strategy."
+                            }
+                        },
+                        "required": ["Choice", "Reason"]
+                    }
+                }
+            }
+        ],
+        tool_choice: dict = {"type": "function", "function": {"name": "play_rock_paper_scissors"}}
+    ) -> Dict:
+    """
+    Run a Rock-Paper-Scissors model with the given parameters.
+
+    :param prompt: The prompt describing the functionality.
+    :param model_name: The name of the model to use.
+    :param api_key: The API key for authentication.
+    :param tools: The tools required for the model.
+    :return: The response from the model.
+    """
+
+    # Initialize the client
+    client = ChatCompletionsClient(
+        endpoint="https://models.inference.ai.azure.com",
+        credential=AzureKeyCredential(api_key),
+    )
+
+    # Make the request
+    response = client.complete(
+        messages=[
+            SystemMessage(content=prompt)
+        ],
+        model=model_name,
+        temperature=1,
+        max_tokens=4096,
+        top_p=1,
+        tools=tools,
+        tool_choice=tool_choice
+    )
+
+
+    # Extract the function arguments from the response
+    try:
+        tool_calls = response["choices"][0]["message"]["tool_calls"]
+        function_arguments = tool_calls[0]["function"]["arguments"]
+        function_arguments_json = json.loads(function_arguments)
+
+        # Log the response to logs/log.json
+        log_file_path = "logs/log.json"
+        os.makedirs(os.path.dirname(log_file_path), exist_ok=True)
+
+        if os.path.exists(log_file_path):
+            with open(log_file_path, "r") as log_file:
+                logs = json.load(log_file)
+        else:
+            logs = []
+
+        logs.append(function_arguments_json)
+
+        with open(log_file_path, "w") as log_file:
+            json.dump(logs, log_file, indent=4)
+
+        return function_arguments_json
+    except (KeyError, IndexError, json.JSONDecodeError):
+        raise ValueError("Failed to extract function arguments from response.")
