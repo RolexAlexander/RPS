@@ -174,7 +174,8 @@ class GameServer:
             conn, addr = self.server.accept()
             if len(self.game_state.clients) < 2:
                 player_id = len(self.game_state.clients) + 1
-                print(f"Player {player_id} connected from: {addr}")
+                # print(f"Player {player_id} connected from: {addr}") removed for demo purposes
+                print(f"Player {player_id} connected")
                 start_new_thread(self.handle_client, (conn, player_id))
             else:
                 conn.send(json.dumps({
