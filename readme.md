@@ -22,7 +22,7 @@ cp env.example .env
 ```
 Update the `.env` file with your values:
 ```env
-GITHUB_TOKEN=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+GITHUB_TOKEN=your_github_token
 SERVER_IP=270.1.0.0.1
 SERVER_PORT=5555
 ```
