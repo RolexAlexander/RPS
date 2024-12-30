@@ -28,7 +28,7 @@ pygame.camera.init()
 
 # Start camera
 cam = pygame.camera.Camera(0, (640, 480))
-# cam.start()
+cam.start()
 
 # Initialize YOLO model this is not accurate enough i replaced it with mediapipe
 # model = 'YOLO("./models/rps.pt")'
